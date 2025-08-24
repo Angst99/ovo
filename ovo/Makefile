@@ -11,7 +11,7 @@ $(MODULE)-objs += touch.o
 $(MODULE)-objs += vma.o
 $(MODULE)-objs += addr_pfn_map.o
 
-EXTRA_CFLAGS += -DHIDE_SELF_MODULE=0	# 是否在模块表中移除自己
+EXTRA_CFLAGS += -DHIDE_SELF_MODULE=1	# 是否在模块表中移除自己
 EXTRA_CFLAGS += -DBUILD_REMAP=1	# 是否编译内存重映射API（不稳定）
 EXTRA_CFLAGS += -DENABLE_REMAP2=0 # 是否使用新的REMAP接口（vmf_insert_pfn）
 EXTRA_CFLAGS += -DINJECT_SYSCALLS=0	# 是否注入SYSCALL开启更多功能
