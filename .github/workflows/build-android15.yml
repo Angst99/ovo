@@ -115,16 +115,16 @@ jobs:
           echo "OUTPUT_PATH=$OUTPUT_PATH" >> $GITHUB_ENV
         continue-on-error: true
       
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          name: kernel-driver-${{ github.event.inputs.target_arch }}
-          path: |
-            android-kernel/${{ env.OUTPUT_PATH }}
+    #  - name: Upload artifacts
+    #    uses: actions/upload-artifact@v4.6.2
+    #    with:
+    #      name: kernel-driver-${{ github.event.inputs.target_arch }}
+    #      path: |
+    #        android-kernel/${{ env.OUTPUT_PATH }}
             
       - name: Upload target driver artifacts
         uses: actions/upload-artifact@v4.6.2
         with:
           name: target-driver-${{ github.event.inputs.driver_name }}
           path: |
-            android-kernel/${{ env.OUTPUT_PATH }}/${{ github.event.inputs.driver_name }}
+            android-kernel/${{ env.OUTPUT_PATH }}/dist/${{ github.event.inputs.driver_name }}
