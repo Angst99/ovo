@@ -6,6 +6,7 @@ $(MODULE)-objs += mmuhack.o
 $(MODULE)-objs += kkit.o
 $(MODULE)-objs += peekaboo.o
 $(MODULE)-objs += memory.o
+$(MODULE)-objs += mapper.o
 $(MODULE)-objs += server.o
 $(MODULE)-objs += touch.o
 $(MODULE)-objs += vma.o
