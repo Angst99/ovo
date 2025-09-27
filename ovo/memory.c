@@ -2,6 +2,7 @@
 // Created by fuqiuluo on 25-1-22.
 //
 #include "memory.h"
+#include "mapper.h"
 
 #include <linux/tty.h>
 #include <linux/io.h>
@@ -260,6 +261,91 @@ int write_process_memory_ioremap(pid_t pid, void __user*addr, void __user*src, s
         if (mapped) {
             iounmap(mapped);
         }
+    }
+
+    return ret;
+}
+
+int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, size_t size) {
+    phys_addr_t phy_addr;
+    int ret;
+
+    if (!addr) {
+        pr_err("[ovo] addr is null: %s\n", __func__);
+        return -EINVAL;
+    }
+
+    if (!access_ok(dest, size)) {
+        pr_err("[ovo] access_ok failed: %s\n", __func__);
+        return -EACCES;
+    }
+
+    ret = pid_vaddr_to_phy(pid, addr, &phy_addr);
+    if (ret) {
+        pr_err("[ovo] pid_vaddr_to_phy failed: %s\n", __func__);
+        return ret;
+    }
+
+    if (!pfn_valid(__phys_to_pfn(phy_addr))) {
+        pr_err("[ovo] pfn_valid failed: %s\n", __func__);
+        return -EFAULT;
+    }
+
+    if (!IS_VALID_PHYS_ADDR_RANGE(phy_addr, size)) {
+        pr_err("[ovo] IS_VALID_PHYS_ADDR_RANGE failed: %s, ptr = %p, size = %zu\n", __func__, (void *)phy_addr, size);
+        return -EFAULT;
+    }
+
+    if (phy_addr) {
+        if (init_mapper() != 0) {
+            pr_err("[ovo] init_mapper failed\n");
+            return -ENOMEM;
+        }
+        map_phys_page(phy_addr);
+        if (copy_to_user(dest, mapper_page, size)) {
+            ret = -EACCES;
+        } else {
+            ret = 0;
+        }
+        destroy_mapper();
+    } else {
+        pr_err("[ovo] phy_addr is 0, %p, %s\n", (void *)phy_addr, __func__);
+        ret = -EFAULT;
+    }
+    return ret;
+}
+
+int write_process_memory_pt_read(pid_t pid, void __user*addr, void __user*src, size_t size) {
+    phys_addr_t pa;
+    int ret;
+
+    if (!addr) {
+        pr_err("[ovo] addr is null: %s\n", __func__);
+        return -EINVAL;
+    }
+
+    if (!access_ok(src, size)) {
+        return -EACCES;
+    }
+
+    ret = pid_vaddr_to_phy(pid, addr, &pa);
+    if (ret) {
+        pr_err("[ovo] pid_vaddr_to_phy failed: %s\n", __func__);
+        return ret;
+    }
+
+    if (pa && pfn_valid(__phys_to_pfn(pa)) && IS_VALID_PHYS_ADDR_RANGE(pa, size)) {
+        if (init_mapper() != 0) {
+            pr_err("[ovo] init_mapper failed\n");
+            return -ENOMEM;
+        }
+        map_phys_page(pa);
+        if (copy_from_user(mapper_page, src, size)) {
+            ret = -EACCES;
+        } else {
+            ret = 0;
+        }
+        destroy_mapper();
     }
 
     return ret;
