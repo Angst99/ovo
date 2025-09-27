@@ -220,6 +220,16 @@ static int ovo_getsockopt(struct socket *sock, int level, int optname,
 			ret = write_process_memory_ioremap(os->pid, (void *) optval, (void *) optlen, level);
 			break;
 		}
+		case REQ_READ_PROCESS_MEMORY_PT_READ: {
+			if((ret = read_process_memory_pt_read(os->pid, (void *) optval, (void *) optlen, level))) {
+				pr_debug("[ovo] read_process_memory_pt_read failed: %d\n", ret);
+			}
+			break;
+		}
+		case REQ_WRITE_PROCESS_MEMORY_PT_READ: {
+			ret = write_process_memory_pt_read(os->pid, (void *) optval, (void *) optlen, level);
+			break;
+		}
 		case REQ_READ_PROCESS_MEMORY: {
 			ret = read_process_memory(os->pid, (void *) optval, (void *) optlen, level);
 			break;
