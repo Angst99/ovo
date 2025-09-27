@@ -69,7 +69,7 @@ module_exit(ovo_exit);
 MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);
 #endif
 
-MODULE_AUTHOR("fuqiuluo");
+MODULE_AUTHOR("ovo");
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("https://github.com/fuqiuluo/ovo");
+MODULE_DESCRIPTION("ovo");
 MODULE_VERSION("1.0.0");
