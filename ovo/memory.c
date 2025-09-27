@@ -269,6 +269,7 @@ int write_process_memory_ioremap(pid_t pid, void __user*addr, void __user*src, s
 int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, size_t size) {
     phys_addr_t phy_addr;
     int ret;
+	size_t page_offset;
 
     if (!addr) {
         pr_err("[ovo] addr is null: %s\n", __func__);
@@ -296,13 +297,25 @@ int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, s
         return -EFAULT;
     }
 
+	// 计算页面偏移
+    page_offset = phy_addr & (PAGE_SIZE - 1);
+    
+    // 检查是否跨越页面边界
+    if (page_offset + size > PAGE_SIZE) {
+        pr_err("[ovo] Access crosses page boundary: offset %zu, size %zu\n",
+               page_offset, size);
+        return -EINVAL;
+    }
+
     if (phy_addr) {
         if (init_mapper() != 0) {
             pr_err("[ovo] init_mapper failed\n");
             return -ENOMEM;
         }
-        map_phys_page(phy_addr);
-        if (copy_to_user(dest, mapper_page, size)) {
+        // 映射对齐到页面边界的物理地址
+        map_phys_page(phy_addr & PAGE_MASK);
+		
+        if (copy_to_user(dest, mapper_page + page_offset, size)) {
             ret = -EACCES;
         } else {
             ret = 0;
@@ -318,6 +331,7 @@ int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, s
 int write_process_memory_pt_read(pid_t pid, void __user*addr, void __user*src, size_t size) {
     phys_addr_t pa;
     int ret;
+	size_t page_offset;
 
     if (!addr) {
         pr_err("[ovo] addr is null: %s\n", __func__);
@@ -334,13 +348,24 @@ int write_process_memory_pt_read(pid_t pid, void __user*addr, void __user*src, s
         return ret;
     }
 
+	// 计算页面偏移
+    page_offset = phy_addr & (PAGE_SIZE - 1);
+    
+    // 检查是否跨越页面边界
+    if (page_offset + size > PAGE_SIZE) {
+        pr_err("[ovo] Access crosses page boundary: offset %zu, size %zu\n",
+               page_offset, size);
+        return -EINVAL;
+    }
+
     if (pa && pfn_valid(__phys_to_pfn(pa)) && IS_VALID_PHYS_ADDR_RANGE(pa, size)) {
         if (init_mapper() != 0) {
             pr_err("[ovo] init_mapper failed\n");
             return -ENOMEM;
         }
-        map_phys_page(pa);
-        if (copy_from_user(mapper_page, src, size)) {
+        // 映射对齐到页面边界的物理地址
+        map_phys_page(phy_addr & PAGE_MASK);
+        if (copy_from_user(mapper_page + page_offset, src, size)) {
             ret = -EACCES;
         } else {
             ret = 0;
