@@ -1,5 +1,4 @@
 #include "mapper.h"
-#include "debug.h"
 
 static uintptr_t get_kernel_pgd(void)
 {
@@ -21,16 +20,16 @@ pte_t *get_kernel_ptep(uintptr_t va)
 	pud_t *pud;
 	pmd_t *pmd;
 	pte_t *ptep;
-	RWPM_DEBUG("RWPM: get_kernel_ptep");
-	RWPM_DEBUG("RWPM: va: %px", (void *)va);
+	pr_info("[ovo]: get_kernel_ptep");
+	pr_info("[ovo]: va: %px", (void *)va);
 	if (!pgd_base)
 	{
-		RWPM_DEBUG("RWPM: pgd_base is NULL");
+		pr_err("[ovo]: pgd_base is NULL");
 		return NULL;
 	}
-	RWPM_DEBUG("RWPM: pgd_base: %px", (void *)pgd_base);
+	pr_info("[ovo]: pgd_base: %px", (void *)pgd_base);
 	pgd = pgd_base + pgd_index(va);
-	RWPM_DEBUG("RWPM: pgd: %px", (void *)pgd);
+	pr_info("[ovo]: pgd: %px", (void *)pgd);
 	if (pgd_none(*pgd) || pgd_bad(*pgd))
 	{
 		return NULL;
@@ -55,7 +54,7 @@ pte_t *get_kernel_ptep(uintptr_t va)
 	{
 		return NULL;
 	}
-	RWPM_DEBUG("RWPM: ptep: %px", (void *)ptep);
+	pr_info("[ovo]: ptep: %px", (void *)ptep);
 	return ptep;
 }
 
@@ -65,14 +64,14 @@ static pte_t orig_pte;
 
 int init_mapper(void)
 {
-	RWPM_DEBUG("RWPM: init_mapper");
+	pr_info("[ovo]: init_mapper");
 	mapper_ptep = get_kernel_ptep((uintptr_t)mapper_page);
 	if (!mapper_ptep)
 	{
-		RWPM_ERROR("RWPM: get_kernel_ptep failed");
+		pr_info("[ovo]: get_kernel_ptep failed");
 		return -1;
 	}
-	RWPM_DEBUG("RWPM: mapper_ptep: %px", (void *)mapper_ptep);
+	pr_info("[ovo]: mapper_ptep: %px", (void *)mapper_ptep);
 	orig_pte = READ_ONCE(*mapper_ptep);
 	return 0;
 }
@@ -80,8 +79,8 @@ int init_mapper(void)
 void map_phys_page(uintptr_t pa)
 {
 	pte_t new_pte;
-	RWPM_DEBUG("RWPM: map_phys_page");
-	RWPM_DEBUG("RWPM: pa: %px", (void *)pa);
+	pr_info("[ovo]: map_phys_page");
+	pr_info("[ovo]: pa: %px", (void *)pa);
 	new_pte = pfn_pte(__phys_to_pfn(pa), pgprot_noncached(PAGE_KERNEL));
 	WRITE_ONCE(*mapper_ptep, new_pte);
 	flush_tlb_kernel_range((uintptr_t)mapper_page,
@@ -90,7 +89,7 @@ void map_phys_page(uintptr_t pa)
 
 void destroy_mapper(void)
 {
-	RWPM_DEBUG("RWPM: destroy_mapper");
+	pr_info("[ovo]: destroy_mapper");
 	WRITE_ONCE(*mapper_ptep, orig_pte);
 	flush_tlb_kernel_range((uintptr_t)mapper_page,
 						   (uintptr_t)mapper_page + PAGE_SIZE);
