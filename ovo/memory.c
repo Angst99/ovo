@@ -349,7 +349,7 @@ int write_process_memory_pt_read(pid_t pid, void __user*addr, void __user*src, s
     }
 
 	// 计算页面偏移
-    page_offset = phy_addr & (PAGE_SIZE - 1);
+    page_offset = pa & (PAGE_SIZE - 1);
     
     // 检查是否跨越页面边界
     if (page_offset + size > PAGE_SIZE) {
@@ -364,7 +364,7 @@ int write_process_memory_pt_read(pid_t pid, void __user*addr, void __user*src, s
             return -ENOMEM;
         }
         // 映射对齐到页面边界的物理地址
-        map_phys_page(phy_addr & PAGE_MASK);
+        map_phys_page(pa & PAGE_MASK);
         if (copy_from_user(mapper_page + page_offset, src, size)) {
             ret = -EACCES;
         } else {
