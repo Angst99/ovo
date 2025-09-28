@@ -269,7 +269,9 @@ int write_process_memory_ioremap(pid_t pid, void __user*addr, void __user*src, s
 int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, size_t size) {
     phys_addr_t phy_addr;
     int ret;
-	size_t page_offset;
+	unsigned long page_offset;
+	unsigned long last_addr;
+	size_t mapped_size;
 
     if (!addr) {
         pr_err("[ovo] addr is null: %s\n", __func__);
@@ -296,6 +298,14 @@ int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, s
         pr_err("[ovo] IS_VALID_PHYS_ADDR_RANGE failed: %s, ptr = %p, size = %zu\n", __func__, (void *)phy_addr, size);
         return -EFAULT;
     }
+
+	mapped_size = PAGE_ALIGN(size + (phy_addr & ~PAGE_MASK));
+
+	last_addr = (phy_addr & PAGE_MASK) + mapped_size - 1;
+	if (!mapped_size || last_addr < (phy_addr & PAGE_MASK) || (last_addr & ~PHYS_MASK)) {
+		pr_err("[ovo] Invalid address range: base=0x%lx, size=%zu\n", (phy_addr & PAGE_MASK), mapped_size);
+        return -EFAULT;
+	}
 
 	// 计算页面偏移
     page_offset = phy_addr & (PAGE_SIZE - 1);
