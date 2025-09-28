@@ -303,7 +303,7 @@ int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, s
 
 	last_addr = (phy_addr & PAGE_MASK) + mapped_size - 1;
 	if (!mapped_size || last_addr < (phy_addr & PAGE_MASK) || (last_addr & ~PHYS_MASK)) {
-		pr_err("[ovo] Invalid address range: base=0x%lx, size=%zu\n", (phy_addr & PAGE_MASK), mapped_size);
+		pr_err("[ovo] Invalid address range last_addr: size=%zu\n", mapped_size);
         return -EFAULT;
 	}
 
