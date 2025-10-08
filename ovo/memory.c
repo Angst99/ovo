@@ -376,8 +376,10 @@ int write_process_memory_pt_read(pid_t pid, void __user*addr, void __user*src, s
     }
 
     if (pa && pfn_valid(__phys_to_pfn(pa)) && IS_VALID_PHYS_ADDR_RANGE(pa, size)) {
+		mutex_lock(&mapper_lock);
         if (init_mapper() != 0) {
             pr_err("[ovo] init_mapper failed\n");
+			mutex_unlock(&mapper_lock);
             return -ENOMEM;
         }
         // 映射对齐到页面边界的物理地址
@@ -388,6 +390,7 @@ int write_process_memory_pt_read(pid_t pid, void __user*addr, void __user*src, s
             ret = 0;
         }
         destroy_mapper();
+		mutex_unlock(&mapper_lock);
     }
 
     return ret;
