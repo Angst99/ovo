@@ -266,6 +266,10 @@ int write_process_memory_ioremap(pid_t pid, void __user*addr, void __user*src, s
     return ret;
 }
 
+#include <linux/mutex.h>
+
+static DEFINE_MUTEX(mapper_lock);
+
 int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, size_t size) {
     phys_addr_t phy_addr;
     int ret;
@@ -318,8 +322,10 @@ int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, s
     }
 
     if (phy_addr) {
+		mutex_lock(&mapper_lock);
         if (init_mapper() != 0) {
             pr_err("[ovo] init_mapper failed\n");
+			mutex_unlock(&mapper_lock);
             return -ENOMEM;
         }
         // 映射对齐到页面边界的物理地址
@@ -331,6 +337,7 @@ int read_process_memory_pt_read(pid_t pid, void __user*addr, void __user*dest, s
             ret = 0;
         }
         destroy_mapper();
+		mutex_unlock(&mapper_lock);
     } else {
         pr_err("[ovo] phy_addr is 0, %p, %s\n", (void *)phy_addr, __func__);
         ret = -EFAULT;
